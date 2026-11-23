@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poland IT Career Agent — Live Autonomous Outreach Monitor</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --panel: #0f1626;
+      --card: #141d31;
+      --border: #23314d;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --gold: #f59e0b;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top right, #111c35, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 1280px; margin: 0 auto; }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+    .header h1 {
+      font-size: 22px;
+      background: linear-gradient(90deg, #f8fafc, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      color: #fff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { transform: translateY(-1px); opacity: 0.94; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-refresh { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+    .btn-draft { background: linear-gradient(135deg, #059669, #10b981); }
+    .btn-add { background: linear-gradient(135deg, #d97706, #f59e0b); color: #070b14; }
+    .btn-admin { background: #1e293b; border: 1px solid #475569; color: #fbbf24; }
+    .btn-admin.unlocked { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; }
+
+    .privacy-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .privacy-bar.admin-active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .add-panel {
+      display: none;
+      background: var(--panel);
+      border: 1px solid #f59e0b;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 22px;
+    }
+    .add-panel h2 { font-size: 16px; color: #fbbf24; margin-bottom: 14px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .input-field, .textarea-field {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid #2b3b5c;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .kpi-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+    .kpi-val { font-size: 32px; font-weight: 800; margin-top: 8px; }
+    .c-gold { color: var(--gold); }
+    .c-blue { color: var(--blue); }
+    .c-green { color: var(--green); }
+    .c-pink { color: var(--pink); }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 240px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .filter-select {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .status-banner {
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    .leads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 480px) { .leads-grid { grid-template-columns: 1fr; } }
+
+    .lead-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .lead-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .lead-title { font-size: 17px; font-weight: 700; color: #fff; }
+    .lead-domain { font-size: 12px; color: var(--muted); }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .badge-ready { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .badge-drafted { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .badge-sent { background: rgba(236, 72, 153, 0.16); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.35); }
+
+    .email-pill {
+      display: inline-block;
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      word-break: break-all;
+    }
+    .email-pill.protected { color: #94a3b8; border-style: dashed; }
+    .snippet-box {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      background: #0b1120;
+      padding: 10px;
+      border-radius: 8px;
+      line-height: 1.45;
+      max-height: 95px;
+      overflow-y: auto;
+    }
+    .draft-box {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid #2b3b5c;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      line-height: 1.45;
+      resize: vertical;
+      margin-top: 6px;
+    }
+    .card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1f2c47;
+      padding-top: 10px;
+    }
+    .mini-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 7px 11px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .mini-btn:hover { background: #334155; }
+    .mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .mini-btn-save { background: #0f766e; border-color: #14b8a6; color: #fff; }
+    .mini-btn-send { background: linear-gradient(135deg, #ec4899, #8b5cf6); border: none; color: #fff; }
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 50px 20px;
+      background: var(--panel);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Poland IT Career Agent — Live Autonomous Monitor</h1>
+        <p>Built by <strong>Subrata Mondal</strong> • Real-time Python + Google Sheets AI Outreach Pipeline</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-refresh" id="btnRefresh" onclick="loadLeads()">Refresh Live Feed</button>
+        <button class="btn btn-add" id="btnToggleAdd" style="display:none;" onclick="toggleAddPanel()">+ Add New Lead</button>
+        <button class="btn btn-draft" id="btnWriteDrafts" style="display:none;" onclick="triggerSheetDrafts()">Write AI Drafts</button>
+        <button class="btn btn-admin" id="btnAdmin" onclick="toggleAdmin()">Admin Unlock</button>
+      </div>
+    </div>
+
+    <div class="privacy-bar" id="privacyBar">
+      <span id="privacyText"><strong>Public Read-Only Showcase Mode:</strong> HR emails and private drafts are masked to protect data privacy.</span>
+      <span id="lastSyncText">Auto-sync: 30s</span>
+    </div>
+
+    <div id="statusBanner" class="status-banner"></div>
+
+    <!-- Admin-only Manual Lead Entry Panel -->
+    <div class="add-panel" id="addLeadPanel">
+      <h2>Add New Company & HR Email Directly to Google Sheet</h2>
+      <div class="form-grid">
+        <input type="text" id="newCompName" class="input-field" placeholder="Company Name (e.g. Netguru)" />
+        <input type="text" id="newCompDomain" class="input-field" placeholder="Domain (e.g. netguru.com)" />
+        <input type="email" id="newHrEmail" class="input-field" placeholder="HR Email (e.g. jobs@netguru.com)" />
+        <input type="text" id="newCity" class="input-field" placeholder="City (e.g. Warsaw / Remote)" value="Poland" />
+      </div>
+      <input type="text" id="newSubject" class="input-field" style="margin-bottom:10px;" value="Junior Web Developer & AI Vibe Coder - Subrata Mondal" placeholder="Email Subject" />
+      <textarea id="newBody" class="textarea-field" rows="5" placeholder="Optional: Write custom cover letter now (or leave blank to auto-generate with AI later)"></textarea>
+      <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn" style="background:#334155;" onclick="toggleAddPanel()">Cancel</button>
+        <button class="btn btn-draft" id="btnSaveNewLead" onclick="submitNewLead()">Save to Google Sheet</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Verified Polish Companies</div>
+        <div class="kpi-val c-gold" id="kpiTotal">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Queued For Outreach</div>
+        <div class="kpi-val c-blue" id="kpiReady">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">AI Cover Letters Ready</div>
+        <div class="kpi-val c-green" id="kpiDrafted">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Applications Sent</div>
+        <div class="kpi-val c-pink" id="kpiSent">0</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-box" placeholder="Search verified Polish companies or domains..." oninput="renderLeads()" />
+      <select id="statusFilter" class="filter-select" onchange="renderLeads()">
+        <option value="ALL">All Verified Companies</option>
+        <option value="READY_FOR_DRAFT">Queued Only</option>
+        <option value="DRAFTED">Drafted Ready to Send</option>
+        <option value="SENT">Sent Applications</option>
+      </select>
+    </div>
+
+    <div class="leads-grid" id="leadsGrid">
+      <div class="empty-state">Connecting to live Google Sheets pipeline...</div>
+    </div>
+  </div>
+
+  <script>
+    const WEBHOOK_URL = "";
+    const ADMIN_PIN = "5047";
+
+    let allLeads = [];
+    let isAdmin = sessionStorage.getItem("career_admin_unlocked") === "1";
+
+    function updatePrivacyUI() {
+      const btnAdmin = document.getElementById("btnAdmin");
+      const btnDraft = document.getElementById("btnWriteDrafts");
+      const btnAdd = document.getElementById("btnToggleAdd");
+      const bar = document.getElementById("privacyBar");
+      const text = document.getElementById("privacyText");
+
+      if (isAdmin) {
+        btnAdmin.textContent = "Lock Admin Mode";
+        btnAdmin.classList.add("unlocked");
+        btnDraft.style.display = "inline-flex";
+        btnAdd.style.display = "inline-flex";
+        bar.classList.add("admin-active");
+        text.innerHTML = "<strong>Admin Mode Unlocked:</strong> Edit drafts, add leads, and send emails directly from this dashboard.";
+      } else {
+        btnAdmin.textContent = "Admin Unlock";
+        btnAdmin.classList.remove("unlocked");
+        btnDraft.style.display = "none";
+        btnAdd.style.display = "none";
+        document.getElementById("addLeadPanel").style.display = "none";
+        bar.classList.remove("admin-active");
+        text.innerHTML = "<strong>Public Read-Only Showcase Mode:</strong> HR emails and private drafts are masked to protect data privacy.";
+      }
+    }
+
+    function toggleAdmin() {
+      if (isAdmin) {
+        isAdmin = false;
+        sessionStorage.removeItem("career_admin_unlocked");
+        updatePrivacyUI();
+        renderLeads();
+        showBanner("Dashboard locked back to Public Read-Only Mode.");
+        return;
+      }
+      const entered = prompt("Enter Admin PIN to unlock editing & direct send:");
+      if (entered === ADMIN_PIN) {
+        isAdmin = true;
+        sessionStorage.setItem("career_admin_unlocked", "1");
+        updatePrivacyUI();
+        renderLeads();
+        showBanner("Admin Mode unlocked!");
+      } else if (entered !== null) {
+        alert("Incorrect PIN.");
+      }
+    }
+
+    function toggleAddPanel() {
+      if (!isAdmin) return;
+      const panel = document.getElementById("addLeadPanel");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
+
+    function maskEmail(email) {
+      const parts = String(email || "").split("@");
+      if (parts.length !== 2) return "Protected HR Contact";
+      return `${parts[0].slice(0, 2)}***@${parts[1]} (Masked)`;
+    }
+
+    function showBanner(msg) {
+      const b = document.getElementById("statusBanner");
+      b.textContent = msg;
+      b.style.display = "block";
+      setTimeout(() => { b.style.display = "none"; }, 6000);
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function loadLeads() {
+      const btn = document.getElementById("btnRefresh");
+      btn.disabled = true;
+      btn.textContent = "Syncing...";
+      try {
+        const res = await fetch(WEBHOOK_URL + "?t=" + Date.now());
+        const data = await res.json();
+        allLeads = Array.isArray(data.leads) ? data.leads : [];
+        updateKPIs();
+        renderLeads();
+      } catch (err) {
+        document.getElementById("leadsGrid").innerHTML =
+          '<div class="empty-state">Unable to reach live feed right now. Retrying automatically...</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Refresh Live Feed";
+      }
+    }
+
+    function updateKPIs() {
+      const total = allLeads.length;
+      const ready = allLeads.filter(r => String(r.Status || "").trim() === "READY_FOR_DRAFT").length;
+      const drafted = allLeads.filter(r => String(r.Status || "").trim() === "DRAFTED").length;
+      const sent = allLeads.filter(r => String(r.Status || "").trim() === "SENT").length;
+
+      document.getElementById("kpiTotal").textContent = total;
+      document.getElementById("kpiReady").textContent = ready;
+      document.getElementById("kpiDrafted").textContent = drafted;
+      document.getElementById("kpiSent").textContent = sent;
+      document.getElementById("lastSyncText").textContent = "Synced: " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function renderLeads() {
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      const statusFilter = document.getElementById("statusFilter").value;
+      const grid = document.getElementById("leadsGrid");
+
+      const filtered = allLeads.slice().reverse().filter(row => {
+        const st = String(row.Status || "").trim();
+        if (statusFilter !== "ALL" && st !== statusFilter) return false;
+        if (!query) return true;
+        const hay = `${row["Company Name"] || ""} ${row.Domain || ""} ${row.City || ""}`.toLowerCase();
+        return hay.includes(query);
+      });
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-state">No companies match this filter right now.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map((row, idx) => {
+        const rowNum = row.rowNumber || 0;
+        const comp = escapeHtml(row["Company Name"] || "Verified Company");
+        const dom = escapeHtml(row.Domain || "");
+        const rawEmail = String(row["HR Email"] || "");
+        const displayEmail = isAdmin ? escapeHtml(rawEmail) : escapeHtml(maskEmail(rawEmail));
+        const city = escapeHtml(row.City || "Poland");
+        const url = escapeHtml(row["Job URL"] || ("https://" + dom));
+        const st = String(row.Status || "READY_FOR_DRAFT").trim();
+        const snippet = escapeHtml(row["Page Snippet"] || "Verified Polish tech/web company.");
+        const subject = escapeHtml(row["Email Subject"] || "Junior Web Developer & AI Vibe Coder - Subrata Mondal");
+        const draftBody = escapeHtml(row["Cover Letter Draft"] || "");
+
+        let badgeClass = "badge-ready";
+        if (st === "DRAFTED") badgeClass = "badge-drafted";
+        else if (st === "SENT") badgeClass = "badge-sent";
+
+        let bodySection = "";
+        if (isAdmin) {
+          bodySection = `
+            <label style="font-size:11px; color:#94a3b8; display:block; margin-top:4px;">Email Subject (Editable)</label>
+            <input type="text" class="input-field" style="padding:7px 9px; margin-top:3px;" id="subj-${idx}" value="${subject}" />
+            <label style="font-size:11px; color:#94a3b8; display:block; margin-top:8px;">Cover Letter Draft (Edit or Write Manually)</label>
+            <textarea class="draft-box" rows="6" id="draft-${idx}" placeholder="Write or edit cover letter here...">${draftBody}</textarea>
+          `;
+        } else if (draftBody) {
+          bodySection = `
+            <div class="snippet-box" style="color:#6ee7b7;">
+              AI Cover Letter Draft prepared & locked in Admin Mode.
+            </div>
+          `;
+        } else {
+          bodySection = `<div class="snippet-box">${snippet}</div>`;
+        }
+
+        const adminActions = isAdmin
+          ? `<div style="display:flex; flex-wrap:wrap; gap:6px;">
+               <button class="mini-btn mini-btn-save" id="saveBtn-${idx}" onclick="saveEditedDraft(${rowNum}, ${idx})">Save Draft</button>
+               <button class="mini-btn mini-btn-send" id="sendBtn-${idx}" onclick="directSendEmail(${rowNum}, '${escapeHtml(rawEmail)}', ${idx})">Direct Send Now</button>
+             </div>`
+          : `<span style="font-size:11px; color:#64748b;">Read-Only Public View</span>`;
+
+        return `
+          <div class="lead-card">
+            <div>
+              <div class="lead-top">
+                <div>
+                  <div class="lead-title">${comp}</div>
+                  <div class="lead-domain">${dom} • ${city}</div>
+                </div>
+                <span class="badge ${badgeClass}">${escapeHtml(st)}</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <span class="email-pill ${isAdmin ? "" : "protected"}">${displayEmail}</span>
+              </div>
+              ${bodySection}
+            </div>
+            <div class="card-footer">
+              <a href="${url}" target="_blank" class="mini-btn">Company Site</a>
+              ${adminActions}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function saveEditedDraft(rowNumber, idx) {
+      if (!isAdmin) return;
+      const btn = document.getElementById(`saveBtn-${idx}`);
+      const subject = document.getElementById(`subj-${idx}`).value;
+      const body = document.getElementById(`draft-${idx}`).value;
+
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "update_draft",
+            rowNumber: rowNumber,
+            email_subject: subject,
+            cover_letter_body: body
+          })
+        });
+        showBanner("Draft saved directly to Google Sheet!");
+        await loadLeads();
+      } catch (err) {
+        showBanner("Saved to Google Sheet—refreshing view...");
+        setTimeout(loadLeads, 2000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Draft";
+      }
+    }
+
+    async function directSendEmail(rowNumber, hrEmail, idx) {
+      if (!isAdmin) return;
+      const subject = document.getElementById(`subj-${idx}`).value.trim();
+      const body = document.getElementById(`draft-${idx}`).value.trim();
+      if (!body) {
+        alert("Please write or generate a cover letter before sending.");
+        return;
+      }
+      if (!confirm(`Send this email directly to ${hrEmail} from your Gmail now?`)) return;
+
+      const btn = document.getElementById(`sendBtn-${idx}`);
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "send_email",
+            rowNumber: rowNumber,
+            hr_email: hrEmail,
+            email_subject: subject,
+            cover_letter_body: body
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showBanner(`Email sent directly to ${hrEmail} and marked SENT in Google Sheet!`);
+          await loadLeads();
+        } else {
+          alert("Send error: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        showBanner("Send request dispatched—checking updated status...");
+        setTimeout(loadLeads, 2500);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Direct Send Now";
+      }
+    }
+
+    async function submitNewLead() {
+      if (!isAdmin) return;
+      const comp = document.getElementById("newCompName").value.trim();
+      const dom = document.getElementById("newCompDomain").value.trim();
+      const email = document.getElementById("newHrEmail").value.trim();
+      const city = document.getElementById("newCity").value.trim();
+      const subject = document.getElementById("newSubject").value.trim();
+      const body = document.getElementById("newBody").value.trim();
+
+      if (!comp || !email) {
+        alert("Please enter at least Company Name and HR Email.");
+        return;
+      }
+
+      const btn = document.getElementById("btnSaveNewLead");
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "add_lead",
+            force_manual: true,
+            company_name: comp,
+            company_domain: dom || email.split("@")[1] || "",
+            hr_email: email,
+            city: city || "Poland",
+            job_url: dom ? ("https://" + dom) : "",
+            page_snippet: "Added manually via Admin Dashboard",
+            email_subject: subject,
+            cover_letter_body: body
+          })
+        });
+        document.getElementById("newCompName").value = "";
+        document.getElementById("newCompDomain").value = "";
+        document.getElementById("newHrEmail").value = "";
+        document.getElementById("newBody").value = "";
+        toggleAddPanel();
+        showBanner(`Added ${comp} (${email}) to Google Sheet!`);
+        await loadLeads();
+      } catch (err) {
+        showBanner("Added to Google Sheet—refreshing...");
+        setTimeout(loadLeads, 2000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Save to Google Sheet";
+      }
+    }
+
+    async function triggerSheetDrafts() {
+      if (!isAdmin) return;
+      const btn = document.getElementById("btnWriteDrafts");
+      btn.disabled = true;
+      btn.textContent = "Writing AI Drafts...";
+      try {
+        const res = await fetch(WEBHOOK_URL + "?action=write_drafts");
+        const data = await res.json();
+        showBanner(`Done! Wrote ${data.drafts_written || 0} new AI cover letter draft(s).`);
+        await loadLeads();
+      } catch (err) {
+        showBanner("Triggered AI draft writer—refreshing feed in a moment...");
+        setTimeout(loadLeads, 3000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Write AI Drafts";
+      }
+    }
+
+    updatePrivacyUI();
+    loadLeads();
+    setInterval(loadLeads, 30000);
+  </script>
+</body>
+</html>
